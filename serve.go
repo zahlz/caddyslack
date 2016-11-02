@@ -72,9 +72,9 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 		}, w)
 	}
 
-	w.Header().Set(headerContentType, headerApplicationJSONUTF8)
 	w.WriteHeader(res.StatusCode)
-
+	resBytes, err := ioutil.ReadAll(res.Body)
+	w.Write(resBytes)
 	return 0, err
 }
 
@@ -115,8 +115,7 @@ func printReader(reader io.Reader) io.Reader {
 		}
 		fmt.Println(string(allBytes))
 		return bytes.NewBuffer(allBytes)
-	} else {
-		fmt.Println("reader == nil")
 	}
+	fmt.Println("reader == nil")
 	return reader
 }
