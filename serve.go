@@ -29,11 +29,10 @@ func newHandler(sc *config) *handler {
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
-
+	// Validate
 	if r.URL.Path != h.config.endpoint {
 		return h.Next.ServeHTTP(w, r)
 	}
-
 	if r.Method != "POST" {
 		return h.writeJSON(JSONError{
 			Code:  http.StatusMethodNotAllowed,
@@ -41,7 +40,17 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 		}, w)
 	}
 
-	res, err := http.Post(h.config.remoteURL, "application/json", r.Body)
+	// Modify
+	reader, err := deleteJSONFromReader(r.Body, h.config.delete)
+	if err != nil {
+		return h.writeJSON(JSONError{
+			Code:  http.StatusBadRequest,
+			Error: err.Error(),
+		}, w)
+	}
+
+	// Proxy
+	res, err := http.Post(h.config.remoteURL, "application/json", reader)
 	if err != nil {
 		return h.writeJSON(JSONError{
 			Code:  http.StatusInternalServerError,
@@ -49,6 +58,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 		}, w)
 	}
 
+	// Respond on success
 	return h.writeJSON(JSONError{
 		Code:  res.StatusCode,
 		Error: res.Status,
