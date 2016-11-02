@@ -82,6 +82,39 @@ func TestSetupParse(t *testing.T) {
 				return &config{endpoint: "/slack", remoteURL: "https://hooks.slack.com/services/ID/TOKEN", delete: []string{"channel", "text"}}
 			},
 		},
+		{
+			`slack {
+		   url https://hooks.slack.com/services/ID/TOKEN
+			 only
+		  }`,
+			nil,
+			func() *config {
+				return &config{endpoint: "/slack", remoteURL: "https://hooks.slack.com/services/ID/TOKEN", only: []string{}}
+			},
+		},
+		{
+			`slack {
+		   url https://hooks.slack.com/services/ID/TOKEN
+			 only
+			 	text
+		  }`,
+			nil,
+			func() *config {
+				return &config{endpoint: "/slack", remoteURL: "https://hooks.slack.com/services/ID/TOKEN", only: []string{"text"}}
+			},
+		},
+		{
+			`slack {
+		   url https://hooks.slack.com/services/ID/TOKEN
+			 only
+			 	text
+				chan.x
+		  }`,
+			nil,
+			func() *config {
+				return &config{endpoint: "/slack", remoteURL: "https://hooks.slack.com/services/ID/TOKEN", only: []string{"text", "chan.x"}}
+			},
+		},
 	}
 
 	for i, test := range tests {

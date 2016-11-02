@@ -19,6 +19,7 @@ type config struct {
 	endpoint  string
 	remoteURL string
 	delete    []string
+	only      []string
 }
 
 func newConfig() *config {
@@ -65,6 +66,11 @@ func parse(c *caddy.Controller) (conf *config, err error) {
 			case "delete":
 				for c.NextBlock() {
 					conf.delete = append(conf.delete, c.Val())
+				}
+			case "only":
+				conf.only = make([]string, 0)
+				for c.NextBlock() {
+					conf.only = append(conf.only, c.Val())
 				}
 			}
 		}

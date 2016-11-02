@@ -70,5 +70,61 @@ func TestDeleteJSONFromReader_DeleteNested(t *testing.T) {
 	bytesOut, err := ioutil.ReadAll(readerOut)
 	assert.NoError(t, err)
 	bytesExpected := []byte(`{"channel":{},"text":"hey"}`)
-	assert.Equal(t, string(bytesOut), string(bytesExpected))
+	assert.Equal(t, string(bytesExpected), string(bytesOut))
+}
+
+func TestOnlyJSONFromReader_PassThrough(t *testing.T) {
+	bytesIn := []byte(`{"text":"bla"}`)
+	readerIn := bytes.NewBuffer(bytesIn)
+	var onlyPoints []string
+
+	readerOut, err := onlyJSONFromReader(readerIn, onlyPoints)
+
+	assert.NoError(t, err)
+	bytesOut, err := ioutil.ReadAll(readerOut)
+	assert.NoError(t, err)
+	bytesExpected := []byte(`{"text":"bla"}`)
+	assert.Equal(t, string(bytesExpected), string(bytesOut))
+}
+
+func TestOnlyJSONFromReader_Nothing(t *testing.T) {
+	bytesIn := []byte(`{"text":"bla"}`)
+	readerIn := bytes.NewBuffer(bytesIn)
+	onlyPoints := []string{}
+
+	readerOut, err := onlyJSONFromReader(readerIn, onlyPoints)
+
+	assert.NoError(t, err)
+	bytesOut, err := ioutil.ReadAll(readerOut)
+	assert.NoError(t, err)
+	bytesExpected := []byte(`{}`)
+	assert.Equal(t, string(bytesExpected), string(bytesOut))
+}
+
+func TestOnlyJSONFromReader_One(t *testing.T) {
+	bytesIn := []byte(`{"text":"bla", "channel":"x"}`)
+	readerIn := bytes.NewBuffer(bytesIn)
+	onlyPoints := []string{"channel"}
+
+	readerOut, err := onlyJSONFromReader(readerIn, onlyPoints)
+
+	assert.NoError(t, err)
+	bytesOut, err := ioutil.ReadAll(readerOut)
+	assert.NoError(t, err)
+	bytesExpected := []byte(`{"channel":"x"}`)
+	assert.Equal(t, string(bytesExpected), string(bytesOut))
+}
+
+func TestOnlyJSONFromReader_Many(t *testing.T) {
+	bytesIn := []byte(`{"text":"bla", "channel":"x", "icon":"ghost"}`)
+	readerIn := bytes.NewBuffer(bytesIn)
+	onlyPoints := []string{"channel", "icon"}
+
+	readerOut, err := onlyJSONFromReader(readerIn, onlyPoints)
+
+	assert.NoError(t, err)
+	bytesOut, err := ioutil.ReadAll(readerOut)
+	assert.NoError(t, err)
+	bytesExpected := []byte(`{"channel":"x","icon":"ghost"}`)
+	assert.Equal(t, string(bytesExpected), string(bytesOut))
 }

@@ -1,7 +1,11 @@
 package caddyslack
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/mholt/caddy/caddyhttp/httpserver"
@@ -23,6 +27,7 @@ type handler struct {
 }
 
 func newHandler(sc *config) *handler {
+	fmt.Printf("%+v\n", sc)
 	return &handler{
 		config: sc,
 	}
@@ -41,28 +46,36 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 	}
 
 	// Modify
-	reader, err := deleteJSONFromReader(r.Body, h.config.delete)
+	reader := printReader(r.Body)
+	reader, err := deleteJSONFromReader(reader, h.config.delete)
 	if err != nil {
 		return h.writeJSON(JSONError{
 			Code:  http.StatusBadRequest,
 			Error: err.Error(),
 		}, w)
 	}
-
+	reader = printReader(reader)
+	reader, err = onlyJSONFromReader(reader, h.config.only)
+	if err != nil {
+		return h.writeJSON(JSONError{
+			Code:  http.StatusBadRequest,
+			Error: err.Error(),
+		}, w)
+	}
+	reader = printReader(reader)
 	// Proxy
 	res, err := http.Post(h.config.remoteURL, "application/json", reader)
 	if err != nil {
 		return h.writeJSON(JSONError{
-			Code:  http.StatusInternalServerError,
+			Code:  http.StatusTeapot,
 			Error: err.Error(),
 		}, w)
 	}
 
-	// Respond on success
-	return h.writeJSON(JSONError{
-		Code:  res.StatusCode,
-		Error: res.Status,
-	}, w)
+	w.Header().Set(headerContentType, headerApplicationJSONUTF8)
+	w.WriteHeader(res.StatusCode)
+
+	return 0, err
 }
 
 // JSONError defines how an REST JSON looks like.
@@ -92,4 +105,18 @@ func (h *handler) writeJSON(je JSONError, w http.ResponseWriter) (int, error) {
 	}
 
 	return StatusEmpty, nil
+}
+
+func printReader(reader io.Reader) io.Reader {
+	if reader != nil {
+		allBytes, err := ioutil.ReadAll(reader)
+		if err != nil {
+			fmt.Printf("Error reading reader: %v\n", err)
+		}
+		fmt.Println(string(allBytes))
+		return bytes.NewBuffer(allBytes)
+	} else {
+		fmt.Println("reader == nil")
+	}
+	return reader
 }
