@@ -1,0 +1,11 @@
+language: go
+
+go:
+        - 1.7
+        - tip
+
+go_import_path: github.com/zahlz/caddyslack
+
+test:
+        - go vet ./...
+        - go test -v ./...
