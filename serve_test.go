@@ -3,6 +3,7 @@ package caddyslack
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,14 +26,21 @@ func newTestHandler(t *testing.T, caddyFile string) *handler {
 }
 
 //newTestTarget listens until timeout and returns on the first incoming request
-func newTestTarget(addr string, timeoutSec time.Duration) (*http.Request, error) {
+func newTestTarget(addr string, timeoutSec time.Duration, readyChan chan struct{}) (*http.Request, error) {
 	reqCh := make(chan *http.Request)
 	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 		reqCh <- req
 	})
 
-	go func() { panic(http.ListenAndServe(addr, nil)) }()
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	go func() {
+		close(readyChan)
+		http.Serve(l, nil)
+	}()
 
 	select {
 	case req := <-reqCh:
@@ -49,9 +57,9 @@ func TestServeHTTP_ShouldForwardEmptyRequest(t *testing.T) {
 
 	req, err := http.NewRequest("POST", "/slack", nil)
 	assert.NoError(t, err)
-
+	readyChan := make(chan struct{})
 	go func() {
-		requestToSlack, targetErr := newTestTarget("localhost:9997", 1)
+		requestToSlack, targetErr := newTestTarget("localhost:9997", 1, readyChan)
 		assert.NoError(t, targetErr)
 		bodyToSlack, targetErr := ioutil.ReadAll(requestToSlack.Body)
 		assert.NoError(t, targetErr)
@@ -59,6 +67,7 @@ func TestServeHTTP_ShouldForwardEmptyRequest(t *testing.T) {
 	}()
 
 	w := httptest.NewRecorder()
+	<-readyChan
 	statusForCaddy, err := h.ServeHTTP(w, req)
 	assert.NoError(t, err)
 	assert.Exactly(t, statusForCaddy, StatusEmpty)
