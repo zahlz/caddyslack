@@ -17,7 +17,10 @@ func deleteJSONFromReader(readerIn io.Reader, pointsToDelete []string) (readerOu
 		return readerOut, err
 	}
 	for _, pointToDelete := range pointsToDelete {
-		jsonParsed.DeleteP(pointToDelete)
+		err := jsonParsed.DeleteP(pointToDelete)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return bytes.NewReader(jsonParsed.Bytes()), nil
 }

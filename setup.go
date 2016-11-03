@@ -56,23 +56,9 @@ func parse(c *caddy.Controller) (conf *config, err error) {
 			conf.endpoint = args[0]
 		}
 
-		for c.NextBlock() {
-			switch c.Val() {
-			case "url":
-				if !c.NextArg() {
-					return nil, c.ArgErr()
-				}
-				conf.remoteURL = c.Val()
-			case "delete":
-				for c.NextBlock() {
-					conf.delete = append(conf.delete, c.Val())
-				}
-			case "only":
-				conf.only = make([]string, 0)
-				for c.NextBlock() {
-					conf.only = append(conf.only, c.Val())
-				}
-			}
+		err := iterateBlocks(c, conf)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -80,4 +66,26 @@ func parse(c *caddy.Controller) (conf *config, err error) {
 		return nil, errors.New("required field 'url' not found")
 	}
 	return conf, nil
+}
+
+func iterateBlocks(c *caddy.Controller, conf *config) error {
+	for c.NextBlock() {
+		switch c.Val() {
+		case "url":
+			if !c.NextArg() {
+				return c.ArgErr()
+			}
+			conf.remoteURL = c.Val()
+		case "delete":
+			for c.NextBlock() {
+				conf.delete = append(conf.delete, c.Val())
+			}
+		case "only":
+			conf.only = make([]string, 0)
+			for c.NextBlock() {
+				conf.only = append(conf.only, c.Val())
+			}
+		}
+	}
+	return nil
 }

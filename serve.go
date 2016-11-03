@@ -72,8 +72,10 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 
 	w.WriteHeader(res.StatusCode)
 	resBytes, err := ioutil.ReadAll(res.Body)
-	w.Write(resBytes)
-	return 0, err
+	if err != nil {
+		return -1, err
+	}
+	return w.Write(resBytes)
 }
 
 // JSONError defines how an REST JSON looks like.
