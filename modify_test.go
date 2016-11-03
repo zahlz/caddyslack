@@ -128,3 +128,17 @@ func TestOnlyJSONFromReader_Many(t *testing.T) {
 	bytesExpected := []byte(`{"channel":"x","icon":"ghost"}`)
 	assert.Equal(t, string(bytesExpected), string(bytesOut))
 }
+
+func TestOnlyJSONFromReader_Nested(t *testing.T) {
+	bytesIn := []byte(`{"text":"bla", "channels":{"a":"x","b":"y"}}`)
+	readerIn := bytes.NewBuffer(bytesIn)
+	onlyPoints := []string{"channels.a"}
+
+	readerOut, err := onlyJSONFromReader(readerIn, onlyPoints)
+
+	assert.NoError(t, err)
+	bytesOut, err := ioutil.ReadAll(readerOut)
+	assert.NoError(t, err)
+	bytesExpected := []byte(`{"channels":{"a":"x"}}`)
+	assert.Equal(t, string(bytesExpected), string(bytesOut))
+}
