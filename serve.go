@@ -27,7 +27,6 @@ type handler struct {
 }
 
 func newHandler(sc *config) *handler {
-	fmt.Printf("%+v\n", sc)
 	return &handler{
 		config: sc,
 	}
@@ -46,15 +45,14 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 	}
 
 	// Modify
-	reader := printReader(r.Body)
-	reader, err := deleteJSONFromReader(reader, h.config.delete)
+	reader, err := deleteJSONFromReader(r.Body, h.config.delete)
 	if err != nil {
 		return h.writeJSON(JSONError{
 			Code:  http.StatusBadRequest,
 			Error: err.Error(),
 		}, w)
 	}
-	reader = printReader(reader)
+
 	reader, err = onlyJSONFromReader(reader, h.config.only)
 	if err != nil {
 		return h.writeJSON(JSONError{
@@ -62,7 +60,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 			Error: err.Error(),
 		}, w)
 	}
-	reader = printReader(reader)
+
 	// Proxy
 	res, err := http.Post(h.config.remoteURL, "application/json", reader)
 	if err != nil {
@@ -74,8 +72,10 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 
 	w.WriteHeader(res.StatusCode)
 	resBytes, err := ioutil.ReadAll(res.Body)
-	w.Write(resBytes)
-	return 0, err
+	if err != nil {
+		return -1, err
+	}
+	return w.Write(resBytes)
 }
 
 // JSONError defines how an REST JSON looks like.
@@ -108,14 +108,14 @@ func (h *handler) writeJSON(je JSONError, w http.ResponseWriter) (int, error) {
 }
 
 func printReader(reader io.Reader) io.Reader {
-	if reader != nil {
-		allBytes, err := ioutil.ReadAll(reader)
-		if err != nil {
-			fmt.Printf("Error reading reader: %v\n", err)
-		}
-		fmt.Println(string(allBytes))
-		return bytes.NewBuffer(allBytes)
+	if reader == nil {
+		return reader
 	}
-	fmt.Println("reader == nil")
-	return reader
+
+	allBytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		fmt.Printf("Error reading reader: %v\n", err)
+	}
+	fmt.Println(string(allBytes))
+	return bytes.NewBuffer(allBytes)
 }
