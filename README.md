@@ -1,4 +1,4 @@
-# caddyslack [![Build Status](https://travis-ci.org/zahlz/caddyslack.svg?branch=master)](https://travis-ci.org/zahlz/caddyslack) [![Coverage S://travis-ci.org/zahlz/caddyslack.svg?branch=mastertatus](https://coveralls.io/repos/github/zahlz/caddyslack/badge.svg?branch=master)](https://coveralls.io/github/zahlz/caddyslack?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/zahlz/caddyslack)](https://goreportcard.com/report/github.com/zahlz/caddyslack)
+# caddyslack [![Build Status](https://travis-ci.org/zahlz/caddyslack.svg?branch=master)](https://travis-ci.org/zahlz/caddyslack) [![Coverage Status](https://coveralls.io/repos/github/zahlz/caddyslack/badge.svg?branch=master)](https://coveralls.io/github/zahlz/caddyslack?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/zahlz/caddyslack)](https://goreportcard.com/report/github.com/zahlz/caddyslack)
 
 Caddy plugin to filter and relay incoming WebHook requests to slack
 
