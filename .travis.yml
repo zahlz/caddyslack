@@ -12,4 +12,4 @@ test:
         - go vet ./...
         - go test -v ./... -v -covermode=count -coverprofile=coverage.out
 script:
-        - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+        - $HOME/gopath/bin/goveralls -service=travis-ci
