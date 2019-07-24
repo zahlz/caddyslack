@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/mholt/caddy/caddyhttp/httpserver"
+	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 	"github.com/zahlz/caddyslack/bufpool"
 )
 
@@ -94,7 +94,7 @@ func (h *handler) writeJSON(je JSONError, w http.ResponseWriter) (int, error) {
 
 	w.Header().Set(headerContentType, headerApplicationJSONUTF8)
 
-	// https://github.com/mholt/caddy/issues/637#issuecomment-189599332
+	// https://github.com/caddyserver/caddy/issues/637#issuecomment-189599332
 	w.WriteHeader(je.Code)
 
 	if err := json.NewEncoder(buf).Encode(je); err != nil {
